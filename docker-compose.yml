@@ -1,0 +1,45 @@
+version: "3.8"
+
+services:
+  snort:
+    image: demo-snort3
+    build:
+      context: ./
+      dockerfile: snort3.dockerfile
+    networks:
+      - "demo-net"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`demo-snort.localhost`)"
+      - "traefik.http.routers.frontend.entrypoints=web"
+
+  reverse-proxy:
+    image: "traefik:v2.4"
+    container_name: "traefik"
+    restart: always
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "80:80"
+      - "8080:8080"
+    networks:
+      - "demo-net"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  back-end:
+    image: demo-node
+    build:
+      context: ./
+      dockerfile: node.dockerfile
+    networks:
+      - "demo-net"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=Host(`demo-node.localhost`)"
+      - "traefik.http.routers.backend.entrypoints=web"
+
+networks:
+  demo-net:
