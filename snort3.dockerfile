@@ -1,169 +1,101 @@
 FROM ubuntu:latest
 
-# OINKCODE="9a3d86a9b6c9601d14db1b21c3e53f3531a2bf18"
-# INTERFACE="lo0"
-
-## Env
-ARG DAQ_VER=daq-3.0.3
-
-## PulledPork Env
-ARG PPORK_VERSION=0.7.4
-
-## Snort Env
-ARG SNORT_VER=3.1.0.0
-
-
 ## Install Dependencies
-RUN apt-get update && apt-get -y install \
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -yq \
     wget \
     build-essential \
-    libtool \
-    automake \
-    gcc \
-    flex \
-    bison \
-    libnet1 \
-    libnet1-dev \
-    libpcre3 \
-    libpcre3-dev \
-    autoconf \
-    libcrypt-ssleay-perl \
-    libwww-perl \
-    git \
-    zlib1g \
-    zlib1g-dev \
-    libssl-dev \
-    libmysqlclient-dev \
-    imagemagick \
-    wkhtmltopdf \
-    libyaml-dev \
-    libxml2-dev \
-    libxslt1-dev \
-    openssl \
-    libreadline6-dev \
-    unzip \
-    libcurl4-openssl-dev \
-    libapr1-dev \
-    libaprutil1-dev \
-    supervisor \
-    net-tools \
-    gettext-base \
-    libdumbnet-dev \
     libpcap-dev \
-    python-pip \
+    libpcre3-dev \
+    libnet1-dev \
+    zlib1g-dev \
+    luajit \
+    hwloc \
+    libdnet-dev \
+    libdumbnet-dev \
+    bison \
+    flex \
+    liblzma-dev \
+    openssl \
+    libssl-dev \
+    pkg-config \
+    libhwloc-dev \
+    cmake \
+    cpputest \
+    libsqlite3-dev \
+    uuid-dev \
+    libcmocka-dev \
+    libnetfilter-queue-dev \
+    libmnl-dev \
+    autotools-dev \
+    libluajit-5.1-dev \
+    libunwind-dev \
     && apt-get clean && rm -rf /var/cache/apt/*
 
+# Define working directory.
+WORKDIR /opt
 
-## Install DAQ
-RUN cd /tmp \
-    && wget https://snort.org/downloads/snort/$DAQ_VER.tar.gz \
-    && tar zxf $DAQ_VER.tar.gz \
-    && cd $DAQ_VER \
+# DAQ
+ENV DAQ_VERSION 3.0.3
+RUN wget https://github.com/snort3/libdaq/archive/refs/tags/v${DAQ_VERSION}.tar.gz \
+    && tar xvfz v${DAQ_VERSION}.tar.gz \
+    && cd libdaq-${DAQ_VERSION} \
+    && ./bootstrap \
     && ./configure \
-    && make && make install \
-    && ldconfig
+    && make \
+    && make install
 
-## Install SNORT
-RUN cd /tmp \
-    && wget https://snort.org/downloads/snort/snort-$SNORT_VER.tar.gz \
-    && tar zxf snort-$SNORT_VER.tar.gz \
-    && cd snort-$SNORT_VER \
-    && ./configure --enable-sourcefire \
-    && make && make install
+RUN ldconfig 
 
-## User/group/dir for Snort
-RUN groupadd snort \
-    && useradd snort -d /var/log/snort -s /sbin/nologin -c SNORT_IDS -g snort \
-    && mkdir -p /var/log/snort \
-    && chown snort:snort /var/log/snort -R \
-    && mkdir -p /etc/snort \
-    && cd /tmp/snort-$SNORT_VER \
-    && cp -r etc/* /etc/snort/
+# Snort 3.1.0
+ENV MY_PATH=/usr/local/snort
+ENV SNORT_VERSION 3.1.5.0
+RUN wget https://github.com/snort3/snort3/archive/refs/tags/${SNORT_VERSION}.tar.gz \
+    && tar xvfz ${SNORT_VERSION}.tar.gz \
+    && cd snort3-${SNORT_VERSION} \
+    && ./configure_cmake.sh --prefix=${MY_PATH} \
+    && cd build \
+    && make -j $(nproc) install 
 
-## Install Pulledpork
-RUN cd /tmp \
-    && wget https://github.com/shirkdog/pulledpork/archive/v$PPORK_VERSION.tar.gz \
-    && tar zxf v$PPORK_VERSION.tar.gz \
-    && cd pulledpork-$PPORK_VERSION \
-    && cp pulledpork.pl /usr/sbin/ \
-    && chmod 755 /usr/sbin/pulledpork.pl \
-    && cp -r etc/* /etc/snort/ \
-    && cpan install LWP::Protocol::https \
-    && cpan install Crypt::SSLeay  \
-    && cpan Mozilla::CA IO::Socket::SSL
+RUN ldconfig
 
-RUN rm -rf /tmp/*
+# For this to work you MUST have downloaded the snort3 subscribers ruleset.
+# This has to be located in the directory we are currently in.
+ENV SNORT_RULES_SNAPSHOT 3150
+COPY snortrules-snapshot-${SNORT_RULES_SNAPSHOT}.tar.gz /opt/
+RUN cd /opt/ \
+    && tar xvfz snortrules-snapshot-${SNORT_RULES_SNAPSHOT}.tar.gz \
+    && ls -la && sleep 20
 
-## Snort
-RUN cd /etc/snort \
-    && chown -R snort:snort * \
-    && mkdir -p /usr/local/lib/snort_dynamicrules \
-    && mkdir /etc/snort/rules \
-    && touch /etc/snort/rules/so_rules.rules \
-    && touch /etc/snort/rules/local.rules \
-    && touch /etc/snort/rules/snort.rules \
-    && sed -i \
-      -e 's#^var RULE_PATH.*#var RULE_PATH /etc/snort/rules#' \
-      -e 's#^var SO_RULE_PATH.*#var SO_RULE_PATH $RULE_PATH/so_rules#' \
-      -e 's#^var PREPROC_RULE_PATH.*#var PREPROC_RULE_PATH $RULE_PATH/preproc_rules#' \
-      -e 's#^var WHITE_LIST_PATH.*#var WHITE_LIST_PATH $RULE_PATH/iplists#' \
-      -e 's#^var BLACK_LIST_PATH.*#var BLACK_LIST_PATH $RULE_PATH/iplists#' \
-      -e 's/^\(include $.*\)/# \1/' \
-      -e '$a\\ninclude $RULE_PATH/local.rules' \
-      -e '$a\\ninclude $RULE_PATH/snort.rules' \
-      -e 's!^# \(config logdir:\)!\1 /var/log/snort!' \
-      /etc/snort/snort.conf
+COPY entrypoint.sh /opt
 
-## Install websnort
-RUN pip install websnort
+RUN mkdir -p /var/log/snort && \
+    mkdir -p /usr/local/lib/snort_dynamicrules && \
+    mkdir -p /etc/snort && \
+    mkdir -p /etc/snort/rules && \
+    mkdir -p /etc/snort/preproc_rules && \
+    mkdir -p /etc/snort/etc && \
 
-# Need to generate these for the first run of PulledPork
-RUN touch /etc/snort/rules/local.rules
-RUN mkdir -p /etc/snort/rules/iplists/
-RUN touch /etc/snort/rules/iplists/black_list.rules
-RUN touch /etc/snort/rules/iplists/white_list.rules
+    cp -r /opt/rules /etc/snort && \
+    cp -r /opt/so_rules /etc/snort && \
+    cp -r /opt/etc /etc/snort && \
 
+    touch /etc/snort/rules/local.rules && \
+    touch /etc/snort/rules/white_list.rules /etc/snort/rules/black_list.rules
 
-###########################################################################
-## Edits should be conducted here to limit modification to the upper layers
+# Clean up APT when done.
+RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
+    /opt/snort-${SNORT_VERSION}.tar.gz /opt/daq-${DAQ_VERSION}.tar.gz
 
-ARG SNORT_HOME_NET="192.168.0.0/16,172.16.0.0/12,10.0.0.0/8"
+ENV INTERFACE 'lo0'
+ENV LUA_PATH=${MY_PATH}/include/snort/lua/\?.lua\;\;
+ENV SNORT_LUA_PATH=${MY_PATH}/etc/snort
 
-## copy pulled pork conf
-COPY pulledpork.conf /etc/snort/pulledpork.conf
-RUN sed -i -e 's|<'PPORK_VERSION'>|'$PPORK_VERSION'|g' /etc/snort/pulledpork.conf
+# Validate an installation
+RUN ${MY_PATH}/bin/snort -c /etc/snort/etc/snort.lua && sleep 60
+RUN chmod a+x /opt/entrypoint.sh
 
-## Rule management
-## Enable all rules!!
-## RUN echo 'pcre:.' >> /etc/snort/enablesid.conf
+# Let's run snort!
+CMD ["-i", "lo0"]
+ENTRYPOINT ["/opt/entrypoint.sh"]
+#CMD ["/usr/local/snort/bin/snort", "-d", "-i", "eth0", "-c", "/etc/snort/etc/snort.lua"]
 
-## These are noisy. Bad taffic alerts etc
-## RUN echo 'preprocessor' >> /etc/snort/disablesid.conf
-
-## Allow lots of flow bits
-RUN sed -i 's/^.*config flowbits_size: 64$/config flowbits_size: 2048/' /etc/snort/snort.conf
-## Run snort with rule profiling
-RUN sed -i 's/#config profile_rules: print all, sort avg_ticks/config profile_rules: print 100, sort avg_ticks_per_nomatch/' /etc/snort/snort.conf
-## Disable sensitive data pre proc + rules
-RUN sed -i '/preprocessor sensitive_data/s/^/#/' /etc/snort/snort.conf
-## Enable portscan detection
-RUN sed -i 's/# preprocessor sfportscan/preprocessor sfportscan/' /etc/snort/snort.conf
-## Set HOME_NET
-RUN sed -i 's#^ipvar HOME_NET any.*#ipvar HOME_NET '"$SNORT_HOME_NET"'#' /etc/snort/snort.conf
-
-###########################################################################
-
-# COPY local rules across and re-run pulledpork
-COPY local.rules /etc/snort/rules/local.rules
-COPY ip_black_list.rules /etc/snort/rules/iplists/black_list.rules
-COPY ip_white_list.rules /etc/snort/rules/iplists/white_list.rules
-RUN touch /etc/snort/rules/customintel.rules
-COPY disablesid.conf /etc/snort/disablesid.conf
-
-# Add the script that allows the rules to be updated when the container is running
-COPY *.sh ./
-ARG PPORK_OINKCODE="9a3d86a9b6c9601d14db1b21c3e53f3531a2bf18"
-RUN if [ ! -z $PPORK_OINKCODE ]; then  bash update-rules.sh "$PPORK_OINKCODE"; fi
-
-EXPOSE 8080
-CMD ["websnort"]

@@ -8,10 +8,6 @@ services:
       dockerfile: snort3.dockerfile
     networks:
       - "demo-net"
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.frontend.rule=Host(`demo-snort.localhost`)"
-      - "traefik.http.routers.frontend.entrypoints=web"
 
   reverse-proxy:
     image: "traefik:v2.4"
