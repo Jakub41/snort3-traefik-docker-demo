@@ -2,6 +2,8 @@ version: "3.8"
 
 services:
   snort:
+    cap_add:
+      - NET_ADMIN
     image: demo-snort3
     build:
       context: ./

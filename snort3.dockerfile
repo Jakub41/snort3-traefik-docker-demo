@@ -29,6 +29,9 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -yq \
     autotools-dev \
     libluajit-5.1-dev \
     libunwind-dev \
+    iproute2 \
+    net-tools \
+    sudo \
     && apt-get clean && rm -rf /var/cache/apt/*
 
 # Define working directory.
@@ -90,7 +93,7 @@ RUN mkdir -p /var/log/snort && \
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
     /opt/${SNORT_VERSION}.tar.gz /opt/v${DAQ_VERSION}.tar.gz
 
-ENV INTERFACE 'lo0'
+ENV INTERFACE 'eth0'
 ENV LUA_PATH=${MY_PATH}/include/snort/lua/\?.lua\;\;
 ENV SNORT_LUA_PATH=${MY_PATH}/etc/snort
 ENV PATH="/usr/local/snort/bin:$PATH"
@@ -99,7 +102,20 @@ ENV PATH="/usr/local/snort/bin:$PATH"
 RUN ${MY_PATH}/bin/snort -c /etc/snort/etc/snort.lua
 RUN chmod a+x /opt/entrypoint.sh
 
+# Set net interfaace to promiscous mode to detect traffic efficiently
+#"RUN ip address && sleep 60
+# RUN ip link set dev ${INTERFACE} promisc on
+
+# Make Snort intercept larger packegages
+# Preventing from truncating large packets larger than 1518 bytes
+# RUN ethtool -K ${INTERFACE} gro off lro off
+
+# Persist the NIC and enable service
+# COPY snort3-nic.service /etc/systemd/system/
+# RUN systemctl daemon-reload && systemctl enable --now snort3-nic.service
+
 # Let's run snort!
-CMD ["-i", "lo0"]
+# CMD ["-i", "eth0"]
 ENTRYPOINT ["/opt/entrypoint.sh"]
-#CMD ["/usr/local/snort/bin/snort", "-d", "-i", "eth0", "-c", "/etc/snort/etc/snort.lua"]
+# CMD ["/usr/local/snort/bin/snort", "-d", "-i", "eth0", "-c", "/etc/snort/etc/snort.lua"]
+CMD ["/usr/local/snort/bin/snort", "-i", "eth0", "-c", "/etc/snort/etc/snort.lua", "-A", "full", "-s", "6000" "-k" "none"]
