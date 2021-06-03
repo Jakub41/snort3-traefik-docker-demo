@@ -61,10 +61,9 @@ RUN ldconfig
 # For this to work you MUST have downloaded the snort3 subscribers ruleset.
 # This has to be located in the directory we are currently in.
 ENV SNORT_RULES_SNAPSHOT 3150
-COPY snortrules-snapshot-${SNORT_RULES_SNAPSHOT}.tar.gz /opt/
+COPY snortrules-snapshot-${SNORT_RULES_SNAPSHOT} /opt/
 RUN cd /opt/ \
-    && tar xvfz snortrules-snapshot-${SNORT_RULES_SNAPSHOT}.tar.gz \
-    && ls -la && sleep 20
+    && ls -la && sleep 30
 
 COPY entrypoint.sh /opt
 
@@ -80,12 +79,14 @@ RUN mkdir -p /var/log/snort && \
     cp -r /opt/etc /etc/snort && \
     cp -r /opt/builtins /etc/snort && \
 
+    && ls -la && sleep 60 \
+
     touch /etc/snort/rules/local.rules && \
     touch /etc/snort/rules/white_list.rules /etc/snort/rules/black_list.rules
 
 # Clean up APT when done.
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
-    /opt/snort-${SNORT_VERSION}.tar.gz /opt/daq-${DAQ_VERSION}.tar.gz
+    /opt/${SNORT_VERSION}.tar.gz /opt/v${DAQ_VERSION}.tar.gz
 
 ENV INTERFACE 'lo0'
 ENV LUA_PATH=${MY_PATH}/include/snort/lua/\?.lua\;\;
