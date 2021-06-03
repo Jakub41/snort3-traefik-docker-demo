@@ -78,6 +78,7 @@ RUN mkdir -p /var/log/snort && \
     cp -r /opt/rules /etc/snort && \
     cp -r /opt/so_rules /etc/snort && \
     cp -r /opt/etc /etc/snort && \
+    cp -r /opt/builtins /etc/snort && \
 
     touch /etc/snort/rules/local.rules && \
     touch /etc/snort/rules/white_list.rules /etc/snort/rules/black_list.rules
