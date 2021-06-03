@@ -1231,4 +1231,3 @@ default_whitelist =
 ]]
 
 snort_whitelist_append(default_whitelist)
-

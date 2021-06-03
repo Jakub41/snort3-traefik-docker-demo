@@ -62,8 +62,6 @@ RUN ldconfig
 # This has to be located in the directory we are currently in.
 ENV SNORT_RULES_SNAPSHOT 3150
 COPY snortrules-snapshot-${SNORT_RULES_SNAPSHOT} /opt/
-RUN cd /opt/ \
-    && ls -la && sleep 30
 
 COPY entrypoint.sh /opt
 
@@ -79,8 +77,6 @@ RUN mkdir -p /var/log/snort && \
     cp -r /opt/etc /etc/snort && \
     cp -r /opt/builtins /etc/snort && \
 
-    && ls -la && sleep 60 \
-
     touch /etc/snort/rules/local.rules && \
     touch /etc/snort/rules/white_list.rules /etc/snort/rules/black_list.rules
 
@@ -91,13 +87,13 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
 ENV INTERFACE 'lo0'
 ENV LUA_PATH=${MY_PATH}/include/snort/lua/\?.lua\;\;
 ENV SNORT_LUA_PATH=${MY_PATH}/etc/snort
+ENV PATH="/usr/local/snort/bin:$PATH"
 
 # Validate an installation
-RUN ${MY_PATH}/bin/snort -c /etc/snort/etc/snort.lua && sleep 60
+RUN ${MY_PATH}/bin/snort -c /etc/snort/etc/snort.lua
 RUN chmod a+x /opt/entrypoint.sh
 
 # Let's run snort!
 CMD ["-i", "lo0"]
 ENTRYPOINT ["/opt/entrypoint.sh"]
 #CMD ["/usr/local/snort/bin/snort", "-d", "-i", "eth0", "-c", "/etc/snort/etc/snort.lua"]
-

@@ -21,7 +21,7 @@
 
 -- HOME_NET and EXTERNAL_NET must be set now
 -- setup the network addresses you are protecting
-HOME_NET = '0.0.0.0:8080/24'
+HOME_NET = '0.0.0.0/24'
 
 -- set up the external network addresses.
 -- (leave as "any" in most situations)
@@ -172,8 +172,6 @@ ips =
     -- note that rules files can include other rules files
     --include = 'snort3-community.rules',
 
-    variables = default_variables,
-
     -- RULE_PATH is typically set in snort_defaults.lua
     rules = [[
 
@@ -246,7 +244,8 @@ ips =
 
     ]],
 
-    variables = default_variables_singletable
+    variables = default_variables_singletable,
+    variables = default_variables,
 }
 
 rewrite = { }
@@ -329,4 +328,3 @@ rate_filter =
 if ( tweaks ~= nil ) then
     include(tweaks .. '.lua')
 end
-
