@@ -91,6 +91,8 @@ appid =
 {
     -- appid requires this to use appids in rules
     --app_detector_dir = 'directory to load appid detectors from'
+    app_detector_dir = '/usr/local/lib',
+    log_stats = true,
 }
 
 --[[

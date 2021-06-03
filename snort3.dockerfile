@@ -58,6 +58,12 @@ RUN wget https://github.com/snort3/snort3/archive/refs/tags/${SNORT_VERSION}.tar
 
 RUN ldconfig
 
+# OpenAppID - Device detection
+ENV OPEN_APP_ID 17843
+RUN wget https://www.snort.org/downloads/openappid/${OPEN_APP_ID}  -O OpenAppId-${OPEN_APP_ID}.tgz \
+    && tar xvfz OpenAppId-${OPEN_APP_ID}.tgz \
+    && cp -R odp /usr/local/lib/
+ 
 # For this to work you MUST have downloaded the snort3 subscribers ruleset.
 # This has to be located in the directory we are currently in.
 ENV SNORT_RULES_SNAPSHOT 3150
