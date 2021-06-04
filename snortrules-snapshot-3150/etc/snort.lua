@@ -173,6 +173,7 @@ ips =
     -- use include for rules files; be sure to set your path
     -- note that rules files can include other rules files
     --include = 'snort3-community.rules',
+    include = '/etc/snort/rules/local.rules'
 
     -- RULE_PATH is typically set in snort_defaults.lua
     rules = [[
@@ -307,7 +308,10 @@ rate_filter =
 -- you can enable with defaults from the command line with -A <alert_type>
 -- uncomment below to set non-default configs
 --alert_csv = { }
---alert_fast = { }
+-- alert_fast = {
+--     file = true,
+--     limit = 10,
+-- }
 --alert_full = { }
 --alert_sfsocket = { }
 --alert_syslog = { }

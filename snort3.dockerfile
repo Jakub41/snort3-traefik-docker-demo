@@ -36,13 +36,54 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -yq \
     libtool \
     git \
     autoconf \
+    ragel \
+    libboost-dev \
+    libboost-all-dev \
+    systemd \
     && apt-get clean && rm -rf /var/cache/apt/*
 
 # Define working directory.
 WORKDIR /opt
 
 # Safec for runtime bounds checks on certain legacy C-library calls
+ENV SAFEC_VERSION 02092020
+RUN wget https://github.com/rurban/safeclib/releases/download/v02092020/libsafec-${SAFEC_VERSION}.tar.gz \
+    && tar xvfz libsafec-${SAFEC_VERSION}.tar.gz \
+    && cd libsafec-${SAFEC_VERSION}.0-g6d921f \
+    && ./configure \ 
+    && make \ 
+    && sudo make install
 
+# Hyperscan critical to Snort3 operations and performance
+# uses to fast pattern matching
+# dependencies: PCRE, gperftools, ragel, Boost C++, flatbuffers, colm
+ENV PCRE_VERSION 10.37
+RUN wget https://ftp.pcre.org/pub/pcre/pcre2-${PCRE_VERSION}.tar.gz \
+    && tar xzvf pcre2-${PCRE_VERSION}.tar.gz \
+    && cd pcre2-${PCRE_VERSION} \
+    && ./configure && make && sudo make install
+
+ENV GP_TOOLS_VERSION 2.9.1
+RUN wget https://github.com/gperftools/gperftools/releases/download/gperftools-${GP_TOOLS_VERSION}/gperftools-${GP_TOOLS_VERSION}.tar.gz \
+    && tar xzvf gperftools-${GP_TOOLS_VERSION}.tar.gz \
+    && cd gperftools-${GP_TOOLS_VERSION} \
+    && ./configure && make && sudo make install
+
+ENV HYPERSCAN_VESRSION 5.4.0-2
+RUN wget https://launchpad.net/ubuntu/+archive/primary/+sourcefiles/hyperscan/5.4.0-2/hyperscan_5.4.0.orig.tar.gz \
+    && tar xvzf hyperscan_5.4.0.orig.tar.gz \
+    && mkdir hyperscan-${HYPERSCAN_VESRSION}-build \
+    && cd hyperscan-${HYPERSCAN_VESRSION}-build \
+    && cmake -DCMAKE_INSTALL_PREFIX=/usr/local ../hyperscan-5.4.0 \
+    && make && sudo make install
+
+ENV FLATBUFFERS_VESRSION 2.0.0
+RUN wget https://github.com/google/flatbuffers/archive/refs/tags/v${FLATBUFFERS_VESRSION}.tar.gz -O flatbuffers-v${FLATBUFFERS_VESRSION}.tar.gz \
+    && tar xvzf flatbuffers-v${FLATBUFFERS_VESRSION}.tar.gz \
+    && mkdir flatbuffers-build \
+    && cd flatbuffers-build \
+    && cmake ../flatbuffers-${FLATBUFFERS_VESRSION} \
+    && make && sudo make install
 
 # DAQ
 ENV DAQ_VERSION 3.0.3
@@ -99,6 +140,9 @@ RUN mkdir -p /var/log/snort && \
     touch /etc/snort/rules/local.rules && \
     touch /etc/snort/rules/white_list.rules /etc/snort/rules/black_list.rules
 
+# COPY local rules across
+COPY /rules/local.rules /etc/snort/rules/local.rules
+
 # Clean up APT when done.
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
     /opt/${SNORT_VERSION}.tar.gz /opt/v${DAQ_VERSION}.tar.gz
@@ -108,24 +152,16 @@ ENV LUA_PATH=${MY_PATH}/include/snort/lua/\?.lua\;\;
 ENV SNORT_LUA_PATH=${MY_PATH}/etc/snort
 ENV PATH="/usr/local/snort/bin:$PATH"
 
+# Network interface service
+COPY snort3-nic.service /lib/systemd/system/ethtool.service
+RUN sudo systemctl enable ethtool && sudo service ethtool start
+
 # Validate an installation
 RUN ${MY_PATH}/bin/snort -c /etc/snort/etc/snort.lua
 RUN chmod a+x /opt/entrypoint.sh
-
-# Set net interfaace to promiscous mode to detect traffic efficiently
-#"RUN ip address && sleep 60
-# RUN ip link set dev ${INTERFACE} promisc on
-
-# Make Snort intercept larger packegages
-# Preventing from truncating large packets larger than 1518 bytes
-# RUN ethtool -K ${INTERFACE} gro off lro off
-
-# Persist the NIC and enable service
-# COPY snort3-nic.service /etc/systemd/system/
-# RUN systemctl daemon-reload && systemctl enable --now snort3-nic.service
 
 # Let's run snort!
 # CMD ["-i", "eth0"]
 ENTRYPOINT ["/opt/entrypoint.sh"]
 # CMD ["/usr/local/snort/bin/snort", "-d", "-i", "eth0", "-c", "/etc/snort/etc/snort.lua"]
-CMD ["/usr/local/snort/bin/snort", "-i", "eth0", "-c", "/etc/snort/etc/snort.lua", "-A", "full", "-s", "6000" "-k" "none"]
+CMD ["/usr/local/snort/bin/snort", "-i", "eth0", "-c", "/etc/snort/etc/snort.lua", "-A", "fast", "-s", "65535", "-k", "none"]

@@ -1,13 +1,12 @@
 [Unit]
-Description=Set Snort 3 NIC in promiscuous mode and Disable GRO, LRO on boot
+Description=Ethtool ConfigrationforNetwork Interface
 After=network.target
 
 [Service]
+Requires=network.target
 Type=oneshot
-ExecStart=/usr/sbin/ip link set dev lo0 promisc on
-ExecStart=/usr/sbin/ethtool -K lo0 gro off lro off
-TimeoutStartSec=0
-RemainAfterExit=yes
+ExecStart=/sbin/ethtool -K eth0 gro off
+ExecStart=/sbin/ethtool -K eth0 lro off
 
 [Install]
-WantedBy=default.target
+WantedBy=multi-user.target
