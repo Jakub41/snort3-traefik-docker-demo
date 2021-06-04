@@ -32,10 +32,17 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -yq \
     iproute2 \
     net-tools \
     sudo \
+    ethtool \
+    libtool \
+    git \
+    autoconf \
     && apt-get clean && rm -rf /var/cache/apt/*
 
 # Define working directory.
 WORKDIR /opt
+
+# Safec for runtime bounds checks on certain legacy C-library calls
+
 
 # DAQ
 ENV DAQ_VERSION 3.0.3
@@ -86,6 +93,9 @@ RUN mkdir -p /var/log/snort && \
     cp -r /opt/etc /etc/snort && \
     cp -r /opt/builtins /etc/snort && \
 
+    # Custom rules goes to local.rules 
+    # Will be copied an external file to Docker
+    # COPY local.rules /etc/snort/rules/local.rules
     touch /etc/snort/rules/local.rules && \
     touch /etc/snort/rules/white_list.rules /etc/snort/rules/black_list.rules
 
