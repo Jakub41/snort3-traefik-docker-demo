@@ -160,6 +160,8 @@ RUN sudo systemctl enable ethtool && sudo service ethtool start
 RUN ${MY_PATH}/bin/snort -c /etc/snort/etc/snort.lua
 RUN chmod a+x /opt/entrypoint.sh
 
+# Exposed port
+EXPOSE 8080
 # Let's run snort!
 # CMD ["-i", "eth0"]
 ENTRYPOINT ["/opt/entrypoint.sh"]
