@@ -173,7 +173,7 @@ ips =
     -- use include for rules files; be sure to set your path
     -- note that rules files can include other rules files
     --include = 'snort3-community.rules',
-    include = '/etc/snort/rules/local.rules'
+    include = '/etc/snort/rules/local.rules',
 
     -- RULE_PATH is typically set in snort_defaults.lua
     rules = [[

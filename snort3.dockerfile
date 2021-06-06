@@ -152,9 +152,11 @@ ENV LUA_PATH=${MY_PATH}/include/snort/lua/\?.lua\;\;
 ENV SNORT_LUA_PATH=${MY_PATH}/etc/snort
 ENV PATH="/usr/local/snort/bin:$PATH"
 
-# Network interface service
-COPY snort3-nic.service /lib/systemd/system/ethtool.service
-RUN sudo systemctl enable ethtool && sudo service ethtool start
+# Network interface service --> Not working
+# RUN ls -la /lib/systemd/system/ && sleep 30
+# COPY ethtool.service /lib/systemd/system/
+# RUN sudo service enable --now ethtool \ 
+#     && sudo service ethtool start
 
 # Validate an installation
 RUN ${MY_PATH}/bin/snort -c /etc/snort/etc/snort.lua
