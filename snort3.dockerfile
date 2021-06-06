@@ -40,6 +40,8 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -yq \
     libboost-dev \
     libboost-all-dev \
     systemd \
+    libcrypt-ssleay-perl \ 
+    liblwp-useragent-determined-perl \
     && apt-get clean && rm -rf /var/cache/apt/*
 
 # Define working directory.
@@ -95,7 +97,7 @@ RUN wget https://github.com/snort3/libdaq/archive/refs/tags/v${DAQ_VERSION}.tar.
     && make \
     && make install
 
-RUN ldconfig 
+RUN ldconfig
 
 # Snort 3.1.0
 ENV MY_PATH=/usr/local/snort
@@ -140,6 +142,24 @@ RUN mkdir -p /var/log/snort && \
     touch /etc/snort/rules/local.rules && \
     touch /etc/snort/rules/white_list.rules /etc/snort/rules/black_list.rules
 
+# Pulledpork
+RUN wget https://github.com/shirkdog/pulledpork/archive/master.tar.gz -O pulledpork-master.tar.gz \
+    && tar xzvf pulledpork-master.tar.gz \
+    && cd pulledpork-master \
+    && cp pulledpork.pl /usr/bin/ \
+    && chmod 755 /usr/bin/pulledpork.pl \
+    && cp etc/* /etc/snort/ \
+    && cpan install LWP::Protocol::https \
+    && cpan install Crypt::SSLeay  \
+    && cpan Mozilla::CA IO::Socket::SSL
+
+# Check Pulledpork was installed
+RUN /usr/bin/pulledpork.pl -V && sleep 15
+
+# Pulledpork conf
+COPY pulledpork.conf /etc/snort/pulledpork.conf
+COPY disablesid.conf /etc/snort/disablesid.conf
+
 # COPY local rules across
 COPY /rules/local.rules /etc/snort/rules/local.rules
 
@@ -158,9 +178,18 @@ ENV PATH="/usr/local/snort/bin:$PATH"
 # RUN sudo service enable --now ethtool \ 
 #     && sudo service ethtool start
 
+# HOME_NET config --> chage this with the right IP adresses where snort should monitoring
+# ARG SNORT_HOME_NET="192.168.0.0/16,172.16.0.0/12,10.0.0.0/8"
+# RUN sed -i 's#^HOME_NET any.*#HOME_NET '"$SNORT_HOME_NET"'#' /etc/snort/etc/snort.lua
+
 # Validate an installation
 RUN ${MY_PATH}/bin/snort -c /etc/snort/etc/snort.lua
 RUN chmod a+x /opt/entrypoint.sh
+
+# Add the script that allows the rules to be updated when the container is running
+COPY *.sh ./
+ARG PPORK_OINKCODE
+RUN if [ ! -z $PPORK_OINKCODE ]; then  bash update-rules.sh "$PPORK_OINKCODE"; fi
 
 # Exposed port
 EXPOSE 8080
