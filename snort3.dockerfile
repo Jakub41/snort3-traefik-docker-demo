@@ -122,7 +122,7 @@ RUN wget https://www.snort.org/downloads/openappid/${OPEN_APP_ID}  -O OpenAppId-
 ENV SNORT_RULES_SNAPSHOT 3150
 COPY snortrules-snapshot-${SNORT_RULES_SNAPSHOT} /opt/
 
-COPY entrypoint.sh /opt
+COPY *.sh /opt
 
 RUN mkdir -p /var/log/snort && \
     mkdir -p /usr/local/lib/snort_dynamicrules && \
@@ -172,6 +172,8 @@ ENV LUA_PATH=${MY_PATH}/include/snort/lua/\?.lua\;\;
 ENV SNORT_LUA_PATH=${MY_PATH}/etc/snort
 ENV PATH="/usr/local/snort/bin:$PATH"
 
+RUN cd /usr/local/snort/bin/ && ls -la && sleep 30
+
 # Network interface service --> Not working
 # RUN ls -la /lib/systemd/system/ && sleep 30
 # COPY ethtool.service /lib/systemd/system/
@@ -179,15 +181,14 @@ ENV PATH="/usr/local/snort/bin:$PATH"
 #     && sudo service ethtool start
 
 # HOME_NET config --> chage this with the right IP adresses where snort should monitoring
-# ARG SNORT_HOME_NET="192.168.0.0/16,172.16.0.0/12,10.0.0.0/8"
-# RUN sed -i 's#^HOME_NET any.*#HOME_NET '"$SNORT_HOME_NET"'#' /etc/snort/etc/snort.lua
+ARG SNORT_HOME_NET="192.168.0.0/16,172.16.0.0/12,10.0.0.0/8,172.17.0.0/16"
+RUN sed -i "s#^HOME_NET =.*#HOME_NET = '$SNORT_HOME_NET'#" /etc/snort/etc/snort.lua
 
 # Validate an installation
 RUN ${MY_PATH}/bin/snort -c /etc/snort/etc/snort.lua
-RUN chmod a+x /opt/entrypoint.sh
+RUN chmod a+x /opt/*
 
 # Add the script that allows the rules to be updated when the container is running
-COPY *.sh ./
 ARG PPORK_OINKCODE
 RUN if [ ! -z $PPORK_OINKCODE ]; then  bash update-rules.sh "$PPORK_OINKCODE"; fi
 

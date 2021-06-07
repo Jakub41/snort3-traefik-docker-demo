@@ -21,7 +21,7 @@
 
 -- HOME_NET and EXTERNAL_NET must be set now
 -- setup the network addresses you are protecting
-HOME_NET = '172.25.0.0/24'
+HOME_NET = 'any'
 
 -- set up the external network addresses.
 -- (leave as "any" in most situations)
@@ -94,6 +94,13 @@ appid =
     app_detector_dir = '/usr/local/lib',
     log_stats = true,
 }
+
+search_engine = { search_method = 'hyperscan' }
+detection = {
+    hyperscan_literals = true,
+    pcre_to_regex = true
+}
+
 
 --[[
 reputation =
