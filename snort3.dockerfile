@@ -172,7 +172,8 @@ ENV LUA_PATH=${MY_PATH}/include/snort/lua/\?.lua\;\;
 ENV SNORT_LUA_PATH=${MY_PATH}/etc/snort
 ENV PATH="/usr/local/snort/bin:$PATH"
 
-RUN cd /usr/local/snort/bin/ && ls -la && sleep 30
+# To check what that dir contains
+# RUN cd /usr/local/snort/bin/ && ls -la && sleep 30
 
 # Network interface service --> Not working
 # RUN ls -la /lib/systemd/system/ && sleep 30
@@ -181,7 +182,7 @@ RUN cd /usr/local/snort/bin/ && ls -la && sleep 30
 #     && sudo service ethtool start
 
 # HOME_NET config --> chage this with the right IP adresses where snort should monitoring
-ARG SNORT_HOME_NET="192.168.0.0/16,172.16.0.0/12,10.0.0.0/8,172.17.0.0/16"
+ARG SNORT_HOME_NET="192.168.0.0/16,172.16.0.0/12,0.0.0.0/8,172.17.0.0/16"
 RUN sed -i "s#^HOME_NET =.*#HOME_NET = '$SNORT_HOME_NET'#" /etc/snort/etc/snort.lua
 
 # Validate an installation
@@ -195,7 +196,7 @@ RUN if [ ! -z $PPORK_OINKCODE ]; then  bash update-rules.sh "$PPORK_OINKCODE"; f
 # Exposed port
 EXPOSE 8080
 # Let's run snort!
-# CMD ["-i", "eth0"]
+CMD ["-i", "eth0", "-A", "fast", "-s", "65535", "-k", "none"]
 ENTRYPOINT ["/opt/entrypoint.sh"]
 # CMD ["/usr/local/snort/bin/snort", "-d", "-i", "eth0", "-c", "/etc/snort/etc/snort.lua"]
-CMD ["/usr/local/snort/bin/snort", "-i", "eth0", "-c", "/etc/snort/etc/snort.lua", "-A", "fast", "-s", "65535", "-k", "none"]
+# CMD ["/usr/local/snort/bin/snort", "-i", "eth0", "-c", "/etc/snort/etc/snort.lua", "-A", "fast", "-s", "65535", "-k", "none"]

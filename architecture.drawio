@@ -1,0 +1,41 @@
+<mxfile>
+    <diagram id="2B8PpXw70xZs4xQcILmP" name="Page-1">
+        <mxGraphModel dx="757" dy="785" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" background="none" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="3" style="edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;html=1;fontColor=#5AA9E6;curved=1;fillColor=#60a917;strokeColor=#2D7600;strokeWidth=5;" edge="1" parent="1" source="2">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="320" y="200" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="2" value="SNORT 3&lt;br&gt;IDS/IPS" style="whiteSpace=wrap;html=1;aspect=fixed;rounded=1;fillColor=#0050ef;strokeColor=#001DBC;fontColor=#ffffff;" vertex="1" parent="1">
+                    <mxGeometry x="280" y="50" width="80" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="8" style="edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;html=1;fontColor=#5AA9E6;curved=1;fillColor=#60a917;strokeColor=#2D7600;strokeWidth=5;" edge="1" parent="1" source="4">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="320" y="340" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="9" style="edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;html=1;fontColor=#5AA9E6;curved=1;fillColor=#60a917;strokeColor=#2D7600;strokeWidth=5;" edge="1" parent="1" source="4" target="7">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="10" style="edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontColor=#5AA9E6;curved=1;fillColor=#60a917;strokeColor=#2D7600;strokeWidth=6;" edge="1" parent="1" source="4" target="5">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="4" value="TRAEFIK" style="whiteSpace=wrap;html=1;aspect=fixed;rounded=1;fillColor=#0050ef;strokeColor=#001DBC;fontColor=#ffffff;" vertex="1" parent="1">
+                    <mxGeometry x="280" y="200" width="80" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="5" value="API" style="whiteSpace=wrap;html=1;aspect=fixed;rounded=1;fillColor=#0050ef;strokeColor=#001DBC;fontColor=#ffffff;" vertex="1" parent="1">
+                    <mxGeometry x="414" y="350" width="80" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="6" value="API" style="whiteSpace=wrap;html=1;aspect=fixed;rounded=1;fillColor=#0050ef;strokeColor=#001DBC;fontColor=#ffffff;" vertex="1" parent="1">
+                    <mxGeometry x="290" y="350" width="80" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="7" value="API" style="whiteSpace=wrap;html=1;aspect=fixed;rounded=1;fillColor=#0050ef;strokeColor=#001DBC;fontColor=#ffffff;" vertex="1" parent="1">
+                    <mxGeometry x="160" y="350" width="80" height="80" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
