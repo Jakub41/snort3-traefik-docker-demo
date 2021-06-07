@@ -6,7 +6,7 @@ This project was intended to learn how to integrate a security tool as [Snort3](
 
 The architecture references comes from the following example idea:
 
-![Architecture](../Snort3Demo/architecture.png)
+![Architecture](https://github.com/Jakub41/snort3-traefik-docker-demo/blob/3e621bba1d060f6585270a0f0c958f221f6b5a0b/architecture.png)
 
 ## Instruction 
 
