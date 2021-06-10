@@ -2,9 +2,11 @@ version: "3.8"
 
 services:
   snort:
+    user: root
     cap_add:
       - NET_ADMIN
     image: demo-snort3
+    container_name: snort3Demo
     env_file:
       - ./config.env
     build:
@@ -43,3 +45,4 @@ services:
 
 networks:
   demo-net:
+    driver: bridge
