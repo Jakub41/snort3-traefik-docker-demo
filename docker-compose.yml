@@ -16,7 +16,7 @@ services:
       - "demo-net"
 
   reverse-proxy:
-    image: "traefik:v2.4"
+    image: "traefik:v2.5"
     container_name: "traefik"
     restart: always
     command:
